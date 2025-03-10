@@ -18,7 +18,22 @@
  *    shallowCopy({}) => {}
  */
 function shallowCopy(obj) {
-  return { ...obj };
+  let copy;
+  if (Array.isArray(obj)) {
+    copy = [];
+  } else {
+    copy = {};
+  }
+
+  Object.keys(obj).forEach((key) => {
+    if (typeof key !== 'object' || obj[key] === null) {
+      copy[key] = obj[key];
+    } else {
+      copy[key] = Object.assign(obj);
+    }
+  });
+
+  return copy;
 }
 /**
  * Merges array of objects into a single object. If there are overlapping keys, the values
