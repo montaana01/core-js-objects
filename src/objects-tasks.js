@@ -381,32 +381,115 @@ function group(array, keySelector, valueSelector) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  selector: '',
+  isElementUsed: false,
+  isIdUsed: false,
+  isClassUsed: false,
+  isAttrUsed: false,
+  isPseudoClassUsed: false,
+  isPseudoElementUsed: false,
+
+  element(value) {
+    if (this.isElementUsed) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    if (
+      this.isIdUsed ||
+      this.isClassUsed ||
+      this.isAttrUsed ||
+      this.isPseudoClassUsed ||
+      this.isPseudoElementUsed
+    ) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+    return Object.assign(Object.create(cssSelectorBuilder), this, {
+      selector: this.selector + value,
+      isElementUsed: true,
+    });
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    if (this.isIdUsed) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    if (
+      this.isClassUsed ||
+      this.isAttrUsed ||
+      this.isPseudoClassUsed ||
+      this.isPseudoElementUsed
+    ) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+    return Object.assign(Object.create(cssSelectorBuilder), this, {
+      selector: `${this.selector}#${value}`,
+      isIdUsed: true,
+    });
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    if (this.isAttrUsed || this.isPseudoClassUsed || this.isPseudoElementUsed) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+    return Object.assign(Object.create(cssSelectorBuilder), this, {
+      selector: `${this.selector}.${value}`,
+      isClassUsed: true,
+    });
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    if (this.isPseudoClassUsed || this.isPseudoElementUsed) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+    return Object.assign(Object.create(cssSelectorBuilder), this, {
+      selector: `${this.selector}[${value}]`,
+      isAttrUsed: true,
+    });
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    if (this.isPseudoElementUsed) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+    return Object.assign(Object.create(cssSelectorBuilder), this, {
+      selector: `${this.selector}:${value}`,
+      isPseudoClassUsed: true,
+    });
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    if (this.isPseudoElementUsed) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    return Object.assign(Object.create(cssSelectorBuilder), this, {
+      selector: `${this.selector}::${value}`,
+      isPseudoElementUsed: true,
+    });
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    return Object.assign(Object.create(cssSelectorBuilder), this, {
+      selector: `${selector1.stringify()} ${combinator} ${selector2.stringify()}`,
+    });
+  },
+
+  stringify() {
+    return this.selector;
   },
 };
 
